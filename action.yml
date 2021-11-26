@@ -1,0 +1,92 @@
+---
+name: bindep
+description: >-
+  GitHub Action for provisioning the software listed in `bindep.txt`
+author: Sviatoslav Sydorenko <wk+~github.com/re-actors/bindep@sydorenko.org.ua>
+
+branding:
+  icon: terminal
+  color: gray-dark
+
+inputs:
+  file:
+    default: bindep.txt
+    description: >-
+      `bindep.txt`-compliant file path
+    required: false
+  profile:
+    default: test
+    description: >-
+      `bindep` profile (default: `test`)
+    required: false
+
+outputs:
+  packages:
+    description: List of the installed packages
+    value: ${{ steps.bindep.outputs.packages }}
+
+runs:
+  using: composite
+  steps:
+  - name: Retrieve the packages from bindep.txt
+    id: bindep
+    run: >
+      echo ::group::Reading the deps for
+      '${{ inputs.profile }}' from '${{ inputs.file }}'...
+
+      set -x
+
+      PKGS=$( \
+        echo $( \
+          pipx run bindep \
+            -b \
+            -f '${{ inputs.file }}' \
+            '${{ inputs.profile }}' \
+        ) \
+      )
+
+      echo "::set-output name=packages::${PKGS}"
+
+      set +x
+
+      echo ::endgroup::
+    shell: bash
+  - name: Log the packages
+    if: steps.bindep.outputs.packages
+    run: >
+      echo Missing bindep-required packages are:
+      ${{ steps.bindep.outputs.packages }}
+    shell: bash
+  - name: Log the packages
+    if: >-
+      !steps.bindep.outputs.packages
+    run: >
+      echo bindep.txt profile '${{ inputs.profile }}' is fully satisfied.
+      Nothing to do.
+    shell: bash
+  - name: Install the packages from `bindep.txt`
+    if: steps.bindep.outputs.packages
+    run: >
+      echo ::group::Installing
+      '${{ steps.bindep.outputs.packages }}'
+      using Ansible...
+
+      PKGS=$( \
+        echo '${{ steps.bindep.outputs.packages }}' \
+        | \
+        sed 's#\(^\s\+\|\s\+$\)##g;s#\s#\,#g' \
+      )
+
+      set -x
+
+      ansible localhost
+      -c local
+      --become
+      -m ansible.builtin.package
+      -a "name=${PKGS} state=present"
+
+      set +x
+
+      echo ::endgroup::
+    shell: bash
+...
