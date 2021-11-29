@@ -79,7 +79,13 @@ runs:
 
       set -x
 
-      ansible localhost
+      ANSIBLE_CMD=$( \
+        command -v ansible \
+        || \
+        echo pipx run --spec ansible-core ansible \
+      )
+
+      ${ANSIBLE_CMD} localhost
       -c local
       --become
       -m ansible.builtin.package
