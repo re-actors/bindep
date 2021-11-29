@@ -50,7 +50,7 @@ runs:
       then
 
         >&2 echo "It appears the ${{ inputs.file }} is missing" \
-          ${PKGS}" \
+          "${PKGS}" \
           "Did you forget to fetch your repository onto the runner?"
 
         exit 1
