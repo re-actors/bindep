@@ -44,12 +44,17 @@ runs:
             ${{ inputs.profile }} \
         ) \
       )
+
       if [[ 'Error reading file ${{ inputs.file }}.' == "${PKGS}" ]]
+
       then
+
         >&2 echo "It appears the ${{ inputs.file }} is missing" \
           ${PKGS}" \
           "Did you forget to fetch your repository onto the runner?"
+
         exit 1
+
       fi
 
       echo "::set-output name=packages::${PKGS}"
