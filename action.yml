@@ -41,7 +41,7 @@ runs:
           pipx run bindep \
             -b \
             -f '${{ inputs.file }}' \
-            '${{ inputs.profile }}' \
+            ${{ inputs.profile }} \
         ) \
       )
 
